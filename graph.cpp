@@ -57,6 +57,29 @@ class Graph{
 			dfsRecurUtil(*it);
 		}
 	}
+	void topoSortUtil(int root,stack<int> &s){
+		if(!visited[root]){
+			visited[root]=true;
+			for(vector<int>::iterator itr=graph[root].begin();itr!=graph[root].end();itr++)
+				topoSortUtil(*itr,s);
+			s.push(root);
+		}
+	}
+	bool checkCycleUtil(int root,vector<bool> &currPath){
+		if(!visited[root]){
+			visited[root]=true;
+			currPath[root]=true;
+			for(vector<int>::iterator itr=graph[root].begin();itr!=graph[root].end();itr++){
+				if(currPath[*itr])
+					return true;
+				else
+					if(checkCycleUtil(*itr,currPath))
+						return true;
+			}
+			currPath[root]=false;
+			return false;
+		}
+	}
 	public:
 	Graph(int size,bool isDirected=false){
 		this->size=size;
@@ -84,6 +107,28 @@ class Graph{
 		for(int i=1;i<=size;i++)
 			dfsRecurUtil(i);
 	}
+	void topologicalSort(){
+		stack<int> s;
+		emptyVisited();
+		for(int i=1;i<=size;i++)
+			topoSortUtil(i,s);
+		cout << "Topological Sort: " ;
+		while(!s.empty()){
+			cout << s.top() << " ";
+			s.pop();
+		}
+	}
+	bool checkCycle(){
+		emptyVisited();
+		vector<bool> currPath;
+		currPath.resize(size+1);
+		fill(currPath.begin(),currPath.end(),false);
+		emptyVisited();
+		for(int i=1;i<=size;i++)
+			if(checkCycleUtil(i,currPath))
+				return true;
+		return false;
+	}
 };
 
 
@@ -105,5 +150,6 @@ int main(){
 	cout << "DFS Recursive: " << endl;
 	g.dfsRecursive();
 	cout << endl;
+	g.topologicalSort();
 	return 0;
 }
