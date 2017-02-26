@@ -83,6 +83,39 @@ class BST{
 		else
 			return temp;
 	}
+	bool deleteNodeUtil(Node **root,int data){
+		if(!(*root))
+			return false;
+		else if(data>(*root)->data)
+			deleteNodeUtil(&((*root)->right),data);
+		else if(data<(*root)->data)
+			deleteNodeUtil(&((*root)->left),data);
+		else{
+			if(!((*root)->left) || !((*root)->right)){
+				Node *temp = (*root)->left?(*root)->left:(*root)->right;
+				if(temp){
+					(*root)->data=temp->data;
+					(*root)->left=temp->left;
+					(*root)->right=temp->right;
+					if(temp->left)
+						temp->left->parent=(*root);
+					if(temp->right)
+						temp->right->parent=(*root);
+				}
+				else{
+					temp=(*root);
+					(*root)=NULL;
+				}
+			delete temp;		
+			}
+			else{
+				Node* succ = findSuccessor((*root));
+				(*root)->data=succ->data;
+				deleteNodeUtil(&((*root)->right),succ->data);
+			}
+			return true;
+		}
+	}
 	public:
 		BST(){
 			root=NULL;
@@ -134,86 +167,9 @@ class BST{
 			if(temp->right)
 			return findMinUtil(temp->right);
 		}
+
 		bool deleteNode(int data){
-			Node *dataNode = findNode(data);
-			if(dataNode){
-				Node *parent = dataNode->parent;
-				if(!(dataNode->left) && !(dataNode->right)){
-					if(parent && (parent->left)==dataNode)
-					parent->left=NULL;
-					else if(parent && (parent->right)==dataNode)
-					parent->right=NULL;
-					if(dataNode==root)
-					root=NULL;
-					delete dataNode;
-					return true;
-				}
-				else if(dataNode->left && !(dataNode->right)){
-					(dataNode->left)->parent=parent;
-					if(parent && (parent->left)==dataNode)
-					parent->left=dataNode->left;
-					else if(parent && (parent->right)==dataNode)
-					parent->right=dataNode->left;
-					if(dataNode==root)
-					root=dataNode->left;
-					delete dataNode;
-					return true;
-				}
-				else if(!(dataNode->left) && dataNode->right){
-					(dataNode->right)->parent=parent;
-					if(parent && (parent->left)==dataNode)
-					parent->left=dataNode->right;
-					else if(parent && (parent->right)==dataNode)
-					parent->right=dataNode->right;
-					if(dataNode==root)
-					root=dataNode->right;
-					delete dataNode;
-					return true;
-				}
-				else{
-					Node *succ=findSuccessor(dataNode);
-					if(succ){
-						if(succ->parent==dataNode){ // immegiate successor
-							succ->left=dataNode->left;
-							if(dataNode->left)
-							(dataNode->left)->parent=succ;
-							succ->parent=parent;
-							if(parent){
-								if(parent->left==dataNode)
-								parent->left=succ;
-								else 
-								parent->right=succ;
-							}
-							if(dataNode==root)
-							root=succ;
-							delete dataNode;
-							return true;
-						}
-						(succ->parent)->left=succ->right;
-						if(succ->right)
-						(succ->right)->parent=succ->parent;
-						// succ is free now
-						succ->left=dataNode->left;
-						succ->right=dataNode->right;
-						succ->parent=dataNode->parent;
-						(dataNode->left)->parent=succ;
-						(dataNode->right)->parent=succ;
-						if(dataNode->parent){
-							if((dataNode->parent)->left==dataNode)
-							(dataNode->parent)->left=succ;
-							else
-							(dataNode->parent)->right=succ;
-						}
-						if(dataNode==root)
-						root=succ;
-						delete dataNode;
-						return true;
-					}
-				}
-			}
-			else
-			return false;
-		}
+			return deleteNodeUtil(&root,data);
 };
 
 void removeDuplicate(BST tree){
@@ -239,7 +195,7 @@ int main(){
 	tree.insertNode(17);
 	tree.insertNode(12);
 	tree.inOrder();
-	if(tree.deleteNode(7))
+	if(tree.deleteNode(10))
 	tree.inOrder();
 	if(tree.deleteNode(15))
 	tree.inOrder();
@@ -250,6 +206,8 @@ int main(){
 	if(tree.deleteNode(12))
 	tree.inOrder();
 	if(tree.deleteNode(3))
+	tree.inOrder();
+	if(tree.deleteNode(7))
 	tree.inOrder();
 	return 0;
 }
