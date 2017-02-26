@@ -222,6 +222,10 @@ class BST{
 	    return true;
 
 	}	
+	Node* findSuccessor(Node* temp){
+			if(temp->right)
+			return findMinUtil(temp->right);
+	}
 	public:
 		BST(){
 			root=NULL;
@@ -251,47 +255,12 @@ class BST{
 		int findMax(){
 			return findMaxUtil(root);
 		}
-		Node* findNode(int data){
-			return findNodeUtil(root,data);
-		}
-		int* deleteDuplicate(int *arr,int &size){
-			int *temp = new int[size],j=0;
-			for(int i=0;i<size;i++)
-				if(insertNode(arr[i])){
-					temp[j]=arr[i];
-					j++;
-				}
-			delete[] arr;
-			size=j;
-			int* brr = new int[size];
-			for(int i=0;i<size;i++)
-			brr[i]=temp[i];
-			delete[] temp;
-			return brr;
-		}
-		Node* findSuccessor(Node* temp){
-			if(temp->right)
-			return findMinUtil(temp->right);
-		}
+		
 		bool deleteNode(int data){
 			return deleteNodeUtil(&root,data);
 		}
 		
 };
-
-void removeDuplicate(BST tree){
-	int size;
-	cout << "Enter array size: ";
-	cin >> size;
-	int *arr = new int[size];
-	cout << "Enter array elements: ";
-	for(int i=0;i<size;i++)
-		cin >> arr[i];
-	arr=tree.deleteDuplicate(arr,size);
-	cout << endl <<  "Non-duplicated: " << endl;
-	for(int i=0;i<size;i++)
-		cout << arr[i] << endl;
-}
 
 int main(){
 	BST tree;
