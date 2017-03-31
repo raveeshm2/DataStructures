@@ -269,7 +269,6 @@ int main(){
 	tree.insertNode(15);
 	tree.insertNode(10);
 	tree.insertNode(17);
-	tree.insertNode(12);
 	tree.insertNode(19);
 	tree.preOrder();
 	tree.deleteNode(10);
