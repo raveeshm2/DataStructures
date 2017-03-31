@@ -16,10 +16,14 @@ class Node{
 	}
 };
 
+
 class RBTree{
 	Node *root;
+	bool isNULL(Node *x){
+		return(x->key==-1 && x->left==NULL && x->right==NULL);
+	}
 	Node *insertUtil(Node *root, Node *pt){
-		if(root==NULL)
+		if(root==NULL || isNULL(root))
 			return pt;
 		else if(pt->key<root->key){
 			pt->parent=root;
@@ -66,14 +70,14 @@ class RBTree{
 		if(T)
 		T->parent=y;
 	}
-	void fixUp(Node *pt){
+	void RbInsertFixUp(Node *pt){
 		Node *par,*grandPar,*uncle;
 		while(pt->parent && pt->parent->color==RED){
 			par=pt->parent;
 			grandPar=par->parent;
 			if(par==grandPar->left){
 				uncle=grandPar->right;
-				if(uncle && uncle->color==RED){   // Case 1: Uncle is Red
+				if(uncle->color==RED){   // Case 1: Uncle is Red
 					par->color=BLACK;
 					uncle->color=BLACK;
 					grandPar->color=RED;
@@ -92,7 +96,7 @@ class RBTree{
 			}
 			else{
 				uncle=grandPar->left;
-				if(uncle && uncle->color==RED){
+				if(uncle->color==RED){
 					par->color=BLACK;
 					uncle->color=BLACK;
 					grandPar->color=RED;
@@ -112,15 +116,75 @@ class RBTree{
 		}
 		root->color=BLACK; 
 	}
-	void inOrderUtil(Node *root){
-		if(!root)
-		return;
-		inOrderUtil(root->left);
-		cout << root->key << " " << root->color  << endl;
-		inOrderUtil(root->right);
+	void RbDeleteFixUp(Node *x){
+		Node *s=NULL;
+		while(x!=root && x->color==BLACK){
+			if(x==x->parent->left){
+				s=x->parent->right;
+				if(s->color==RED){  // Case 1 Red Sibling
+					s->color=BLACK;
+					x->parent->color=RED;
+					leftRotate(x->parent);
+					s=x->parent->right;
+				}
+				if(s->left->color==BLACK && s->right->color==BLACK){ // Case 2 and Case 3
+					s->color=RED;
+					if(x->parent->color==BLACK)
+					x=x->parent;
+					else{ // Case 3
+						x->parent->color=BLACK;
+						break;
+					}
+				}
+				else{
+					if(s->right->color==BLACK){ // Case 4
+						s->left->color=BLACK;
+						s->color=RED;
+						rightRotate(s);
+						s=x->parent->right;
+					}
+					s->color=x->parent->color;  // Case 5
+					x->parent->color=BLACK;
+					s->right->color=BLACK;
+					leftRotate(x->parent);
+					break;
+				}
+			}
+			else{
+				s=x->parent->left;
+				if(s->color==RED){  // Case 1 Red Sibling
+					s->color=BLACK;
+					x->parent->color=RED;
+					rightRotate(x->parent);
+					s=x->parent->left;
+				}
+				if(s->left->color==BLACK && s->right->color==BLACK){ // Case 2 and Case 3
+					s->color=RED;
+					if(x->parent->color==BLACK)
+					x=x->parent;
+					else{ // Case 3
+						x->parent->color=BLACK;
+						break;
+					}
+				}
+				else{
+					if(s->left->color==BLACK){ // Case 4
+						s->right->color=BLACK;
+						s->color=RED;
+						leftRotate(s);
+						s=x->parent->left;
+					}
+					s->color=x->parent->color;  // Case 5
+					x->parent->color=BLACK;
+					s->left->color=BLACK;
+					rightRotate(x->parent);
+					break;
+				}
+			}
+		}
 	}
 	void preOrderUtil(Node* root){
-		if(!root)
+		if(root==NULL || isNULL(root))
 			return;
 		cout << root->key << " ";
 		if(root->color==RED)
@@ -130,14 +194,47 @@ class RBTree{
 		preOrderUtil(root->left);
 		preOrderUtil(root->right);
 	}
+	void deleteNodeUtil(Node *root,int key){
+			if(!root || isNULL(root))
+				return;
+			else if(key<root->key)
+				return deleteNodeUtil(root->left,key);
+			else if(key>root->key)
+				return deleteNodeUtil(root->right,key);
+			else if(key==root->key){
+				if(isNULL(root->left) || isNULL(root->right)){
+					Node *temp=!isNULL(root->left)?root->left:root->right;
+					transplant(root,temp);
+					if(root->color==BLACK){
+						if(temp->color==RED)
+							temp->color=BLACK;
+						else
+							RbDeleteFixUp(temp);
+					}
+					delete root;
+				}
+				else{
+					Node *succ=findSmallest(root->right);
+					root->key=succ->key;
+					deleteNodeUtil(root->right,succ->key);
+				}
+			}
+			else return;
+	}
 	public:
 		RBTree(){
 			root=NULL;
 		}
 		void insert(int key){
 			Node *pt = new Node(key);
+			pt->left=new Node(-1);
+			pt->left->color=BLACK;
+			pt->left->parent=pt;
+			pt->right=new Node(-1);
+			pt->right->color=BLACK;
+			pt->right->parent=pt;
 			root=insertUtil(root,pt);
-			fixUp(pt);
+			RbInsertFixUp(pt);
 		}
 		void inOrder(){
 			inOrderUtil(root);
@@ -145,11 +242,41 @@ class RBTree{
 		void preOrder(){
 			preOrderUtil(root);
 		}
+		Node* search(Node *root,int key){
+			if(key<root->key)
+				return search(root->left,key);
+			else if(key>root->key)
+				return search(root->right,key);
+			else
+				return root;
+		}
+		
+		void transplant(Node *u,Node *v){
+			if(!u->parent)
+				root=v;
+			else if (u==u->parent->left)
+				u->parent->left=v;
+			else
+				u->parent->right=v;
+			v->parent=u->parent;
+		}
+		Node* findSmallest(Node *root){
+			if(root->left && !isNULL(root->left))
+				return findSmallest(root->left);
+			else
+				return root;
+		}
+	
+		void deleteNode(int key){
+			deleteNodeUtil(root,key);
+		}
+		
 };
 
 int main(){
 	RBTree tree;
 	tree.insert(22);
+	tree.preOrder();
 
 	tree.insert(5);
 	tree.insert(9);
@@ -165,5 +292,54 @@ int main(){
 	
 	
 	tree.preOrder();
+	
+	cout << endl;
+	
+	tree.deleteNode(9);
+	
+	tree.preOrder();
+	
+	tree.deleteNode(7);
+	cout << endl;
+	tree.preOrder();
+	
+	tree.deleteNode(55);
+	cout << endl;
+	tree.preOrder();
+	
+	tree.deleteNode(11);
+	cout << endl;
+	tree.preOrder();
+	
+	tree.deleteNode(22);
+	cout << endl;
+	tree.preOrder();
+	tree.deleteNode(33);
+		cout << endl;
+	tree.preOrder();
+	tree.deleteNode(6);
+		cout << endl;
+	tree.preOrder();
+	tree.deleteNode(8);
+		cout << endl;
+	tree.preOrder();
+	tree.deleteNode(2);
+		cout << endl;
+	tree.preOrder();
+		tree.deleteNode(5);
+		cout << endl;
+	tree.preOrder();
+	
+	
+	tree.deleteNode(7);
+		cout << endl;
+	tree.preOrder();
+
+	tree.insert(17);
+	cout << endl;
+	tree.preOrder();
+
+	
+	
 	return 0;
 }
